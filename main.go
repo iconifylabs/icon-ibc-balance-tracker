@@ -20,12 +20,15 @@ import (
 	v3 "github.com/icon-project/goloop/server/v3"
 )
 
+var timeout = 10 * time.Second
+
 type NetworkConfig struct {
 	Type      string            `json:"type"`
 	RPC       string            `json:"rpc"`
 	Coin      string            `json:"coin"`
 	Name      string            `json:"name"`
 	Decimals  int               `json:"decimals"`
+	Threshold float64           `json:"threshold"`
 	Addresses map[string]string `json:"addresses"`
 }
 
@@ -44,6 +47,9 @@ type CosmosBalance struct {
 
 func main() {
 	filePath := "./wallets.json"
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+
+	defer cancel()
 
 	content, err := os.ReadFile(filePath)
 	if err != nil {
@@ -66,10 +72,11 @@ func main() {
 		fmt.Println(strings.Repeat("-", 64))
 		switch networkConfig.Type {
 		case "evm":
-			client, err := rpc.DialContext(context.Background(), networkConfig.RPC)
+			client, err := rpc.DialContext(ctx, networkConfig.RPC)
 			if err != nil {
 				log.Fatal(err)
 			}
+			defer client.Close()
 
 			for addressName, address := range networkConfig.Addresses {
 				balance, err := getETHBalance(client, address)
@@ -79,10 +86,14 @@ func main() {
 
 				etherBalance := toDecimalUnit(balance, networkConfig.Decimals)
 				fmt.Printf("%-20s %-22s %-20s\n", addressName, etherBalance.String(), balance.String())
+				if networkConfig.Threshold > 0 && checkBalanceThreshold(balance, networkConfig.Threshold) {
+					sendAlert(networkConfig.Name, address, etherBalance.String())
+				}
 			}
 
 		case "icon":
 			client := iconclient.NewClientV3(networkConfig.RPC)
+			defer client.Cleanup()
 
 			for addressName, address := range networkConfig.Addresses {
 				balance, err := getICXBalance(client, address)
@@ -103,7 +114,9 @@ func main() {
 
 				icxBalance := toDecimalUnit(balance, networkConfig.Decimals)
 				fmt.Printf("%-20s %-22s %-20s\n", addressName, icxBalance.String(), balance.String())
-
+				if networkConfig.Threshold > 0 && checkBalanceThreshold(balance, networkConfig.Threshold) {
+					sendAlert(networkConfig.Name, address, icxBalance.String())
+				}
 			}
 		}
 		fmt.Printf("\n\n")
@@ -138,7 +151,6 @@ func getCosmosBalance(rpc, address, denom string) (*big.Int, error) {
 		}
 	}
 	return big.NewInt(0), nil
-
 }
 
 func getICXBalance(client *iconclient.ClientV3, address string) (*big.Int, error) {
@@ -175,4 +187,17 @@ func toDecimalUnit(wei *big.Int, decimals int) *big.Float {
 
 	ether := new(big.Float).Quo(new(big.Float).SetInt(wei), new(big.Float).SetInt(decimalFactor))
 	return ether
+}
+
+// check if balance is below threshold
+func checkBalanceThreshold(balance *big.Int, threshold float64) bool {
+	balanceFloat := toDecimalUnit(balance, 18)
+	return balanceFloat.Cmp(big.NewFloat(threshold)) == -1
+}
+
+// send alert if balance is below threshold
+func sendAlert(network, address, balance string) {
+	message := fmt.Sprintf("Low balance alert for %s address %s. Current balance is %s", network, address, balance)
+	sendTelegramAlert(message)
+	sendDiscordAlert(message)
 }
