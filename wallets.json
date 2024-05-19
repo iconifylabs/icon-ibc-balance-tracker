@@ -6,6 +6,7 @@
             "rpc": "https://bsc-dataseed.bnbchain.org",
             "decimals": 18,
             "coin": "ETH",
+            "threshold": "0.1",
             "addresses": {
                 "btp-deployer": "0x1903c36e80d6102dea1b6fcc3a491a6fb0fcd8a7",
                 "xcall-deployer": "0xeCeAD2D504b364dB186898D7089a06434648BAe6",
@@ -18,6 +19,7 @@
             "rpc": "https://ethereum.publicnode.com",
             "decimals": 18,
             "coin": "BNB",
+            "threshold": "0.1",
             "addresses": {
                 "btp-deployer": "0x76596e0707408a4a82cd0c20003df4bd612f9734",
                 "xcall-deployer": "0xeCeAD2D504b364dB186898D7089a06434648BAe6",
@@ -29,6 +31,7 @@
             "rpc": "https://ctz.solidwallet.io/api/v3/icon_dex",
             "type": "icon",
             "decimals": 18,
+            "threshold": "200",
             "coin": "ICX",
             "addresses": {
                 "btp-deployer": "hx3af69f7d7aeb819a68f6b5675e4c8c0c9a0528c2",
@@ -44,6 +47,7 @@
             "rpc": "https://api.mainnet.archway.io",
             "type": "cosmos",
             "decimals": 18,
+            "threshold": "50",
             "coin": "AARCH",
             "addresses": {
                 "ibc-deployer": "archway1892ylcnlhr8yw72ly6twcwjp32nf4n4kxl4vef",
@@ -56,6 +60,7 @@
             "rpc": "https://api.novel.remedy.tm.p2p.org",
             "type": "cosmos",
             "decimals": 6,
+            "threshold": "20",
             "coin": "UNTRN",
             "addresses": {
                 "ibc-deployer": "neutron1892ylcnlhr8yw72ly6twcwjp32nf4n4khtq2fe",
