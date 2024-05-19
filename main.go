@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -20,7 +21,12 @@ import (
 	v3 "github.com/icon-project/goloop/server/v3"
 )
 
-var timeout = 10 * time.Second
+var (
+	timeout           = 10 * time.Second
+	filePath          = "./wallets.json"
+	telegramBotToken  = os.Getenv("TELEGRAM_BOT_TOKEN")
+	discordWebhookURL = os.Getenv("DISCORD_WEBHOOK_URL")
+)
 
 type NetworkConfig struct {
 	Type      string            `json:"type"`
@@ -45,16 +51,22 @@ type CosmosBalance struct {
 	Balances []Balances `json:"balances"`
 }
 
-func main() {
-	filePath := "./wallets.json"
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+type TelegramMessage struct {
+	ChatID string `json:"chat_id"`
+	Text   string `json:"text"`
+}
 
+type DiscordMessage struct {
+	Content string `json:"content"`
+}
+
+func main() {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		fmt.Println("Error reading file:", err)
-		return
+		log.Fatal(err)
 	}
 
 	var chainCfg ChainConfig
@@ -86,7 +98,7 @@ func main() {
 
 				etherBalance := toDecimalUnit(balance, networkConfig.Decimals)
 				fmt.Printf("%-20s %-22s %-20s\n", addressName, etherBalance.String(), balance.String())
-				if networkConfig.Threshold > 0 && checkBalanceThreshold(balance, networkConfig.Threshold) {
+				if checkBalanceThreshold(balance, networkConfig.Threshold) {
 					sendAlert(networkConfig.Name, address, etherBalance.String())
 				}
 			}
@@ -114,7 +126,7 @@ func main() {
 
 				icxBalance := toDecimalUnit(balance, networkConfig.Decimals)
 				fmt.Printf("%-20s %-22s %-20s\n", addressName, icxBalance.String(), balance.String())
-				if networkConfig.Threshold > 0 && checkBalanceThreshold(balance, networkConfig.Threshold) {
+				if checkBalanceThreshold(balance, networkConfig.Threshold) {
 					sendAlert(networkConfig.Name, address, icxBalance.String())
 				}
 			}
@@ -200,4 +212,37 @@ func sendAlert(network, address, balance string) {
 	message := fmt.Sprintf("Low balance alert for %s address %s. Current balance is %s", network, address, balance)
 	sendTelegramAlert(message)
 	sendDiscordAlert(message)
+}
+
+func sendTelegramAlert(message string) error {
+	msg := TelegramMessage{
+		Text: message,
+	}
+	jsonMsg, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	_, err = http.Post("https://api.telegram.org/bot"+telegramBotToken+"/sendMessage", "application/json", bytes.NewBuffer(jsonMsg))
+	return err
+}
+
+func sendDiscordAlert(message string) error {
+	msg := DiscordMessage{
+		Content: message,
+	}
+	jsonMsg, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.Post(discordWebhookURL, "application/json", bytes.NewBuffer(jsonMsg))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+	return nil
 }

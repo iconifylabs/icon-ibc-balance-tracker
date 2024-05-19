@@ -31,7 +31,7 @@
             "rpc": "https://ctz.solidwallet.io/api/v3/icon_dex",
             "type": "icon",
             "decimals": 18,
-            "threshold": "0.1",
+            "threshold": "200",
             "coin": "ICX",
             "addresses": {
                 "btp-deployer": "hx3af69f7d7aeb819a68f6b5675e4c8c0c9a0528c2",
@@ -47,7 +47,7 @@
             "rpc": "https://api.mainnet.archway.io",
             "type": "cosmos",
             "decimals": 18,
-            "threshold": "0.1",
+            "threshold": "50",
             "coin": "AARCH",
             "addresses": {
                 "ibc-deployer": "archway1892ylcnlhr8yw72ly6twcwjp32nf4n4kxl4vef",
@@ -60,7 +60,7 @@
             "rpc": "https://api.novel.remedy.tm.p2p.org",
             "type": "cosmos",
             "decimals": 6,
-            "threshold": "0.1",
+            "threshold": "20",
             "coin": "UNTRN",
             "addresses": {
                 "ibc-deployer": "neutron1892ylcnlhr8yw72ly6twcwjp32nf4n4khtq2fe",
