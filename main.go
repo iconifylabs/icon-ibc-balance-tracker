@@ -26,6 +26,7 @@ var (
 	filePath          = "./wallets.json"
 	telegramBotToken  = os.Getenv("TELEGRAM_BOT_TOKEN")
 	discordWebhookURL = os.Getenv("DISCORD_WEBHOOK_URL")
+	prettyFormat      = "%-22s %-22s %-25s %-20s\n"
 )
 
 type NetworkConfig struct {
@@ -33,8 +34,8 @@ type NetworkConfig struct {
 	RPC       string            `json:"rpc"`
 	Coin      string            `json:"coin"`
 	Name      string            `json:"name"`
-	Decimals  int               `json:"decimals"`
-	Threshold float64           `json:"threshold"`
+	Decimals  uint8             `json:"decimals"`
+	Threshold string            `json:"threshold"`
 	Addresses map[string]string `json:"addresses"`
 }
 
@@ -80,25 +81,30 @@ func main() {
 		fmt.Printf("Network: %s\n", networkConfig.Name)
 
 		coinName := networkConfig.Coin
-		fmt.Printf("%-20s %-22s %-20s\n", "Address", fmt.Sprintf("Balance (%s)", coinName), "Balance")
-		fmt.Println(strings.Repeat("-", 64))
+		fmt.Printf(prettyFormat, "Address", fmt.Sprintf("Balance (%s)", coinName), "Balance", "Threshold")
+		fmt.Println(strings.Repeat("-", 90))
+		threshold, ok := new(big.Float).SetString(networkConfig.Threshold)
+		if !ok {
+			fmt.Println("Error parsing threshold value")
+			continue
+		}
 		switch networkConfig.Type {
 		case "evm":
 			client, err := rpc.DialContext(ctx, networkConfig.RPC)
 			if err != nil {
-				log.Fatal(err)
+				continue
 			}
 			defer client.Close()
 
 			for addressName, address := range networkConfig.Addresses {
 				balance, err := getETHBalance(client, address)
 				if err != nil {
-					log.Fatal(err)
+					continue
 				}
 
 				etherBalance := toDecimalUnit(balance, networkConfig.Decimals)
-				fmt.Printf("%-20s %-22s %-20s\n", addressName, etherBalance.String(), balance.String())
-				if checkBalanceThreshold(balance, networkConfig.Threshold) {
+				fmt.Printf(prettyFormat, addressName, etherBalance.String(), balance.String(), threshold.String())
+				if checkBalanceThreshold(etherBalance, threshold) {
 					sendAlert(networkConfig.Name, address, etherBalance.String())
 				}
 			}
@@ -110,23 +116,26 @@ func main() {
 			for addressName, address := range networkConfig.Addresses {
 				balance, err := getICXBalance(client, address)
 				if err != nil {
-					log.Fatal(err)
+					continue
 				}
 
 				icxBalance := toDecimalUnit(balance, networkConfig.Decimals)
-				fmt.Printf("%-20s %-22s %-20s\n", addressName, icxBalance.String(), balance.String())
+				fmt.Printf(prettyFormat, addressName, icxBalance.String(), balance.String(), threshold.String())
+				if checkBalanceThreshold(icxBalance, threshold) {
+					sendAlert(networkConfig.Name, address, icxBalance.String())
+				}
 			}
 
 		case "cosmos":
 			for addressName, address := range networkConfig.Addresses {
 				balance, err := getCosmosBalance(networkConfig.RPC, address, networkConfig.Coin)
 				if err != nil {
-					log.Fatal(err)
+					continue
 				}
 
 				icxBalance := toDecimalUnit(balance, networkConfig.Decimals)
-				fmt.Printf("%-20s %-22s %-20s\n", addressName, icxBalance.String(), balance.String())
-				if checkBalanceThreshold(balance, networkConfig.Threshold) {
+				fmt.Printf(prettyFormat, addressName, icxBalance.String(), balance.String(), threshold.String())
+				if checkBalanceThreshold(icxBalance, threshold) {
 					sendAlert(networkConfig.Name, address, icxBalance.String())
 				}
 			}
@@ -194,7 +203,7 @@ func getETHBalance(client *rpc.Client, address string) (*big.Int, error) {
 	return balance, nil
 }
 
-func toDecimalUnit(wei *big.Int, decimals int) *big.Float {
+func toDecimalUnit(wei *big.Int, decimals uint8) *big.Float {
 	decimalFactor := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(decimals)), nil)
 
 	ether := new(big.Float).Quo(new(big.Float).SetInt(wei), new(big.Float).SetInt(decimalFactor))
@@ -202,9 +211,8 @@ func toDecimalUnit(wei *big.Int, decimals int) *big.Float {
 }
 
 // check if balance is below threshold
-func checkBalanceThreshold(balance *big.Int, threshold float64) bool {
-	balanceFloat := toDecimalUnit(balance, 18)
-	return balanceFloat.Cmp(big.NewFloat(threshold)) == -1
+func checkBalanceThreshold(balance *big.Float, threshold *big.Float) bool {
+	return balance.Cmp(threshold) == -1
 }
 
 // send alert if balance is below threshold
