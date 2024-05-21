@@ -4,6 +4,7 @@
             "name": "bsc",
             "type": "evm",
             "rpc": "https://bsc-dataseed.bnbchain.org",
+            "explorer":"https://bscscan.com/address",
             "decimals": 18,
             "coin": "ETH",
             "threshold": "0.1",
@@ -17,6 +18,7 @@
             "name": "eth",
             "type": "evm",
             "rpc": "https://ethereum.publicnode.com",
+            "explorer":"https://etherscan.io/address",
             "decimals": 18,
             "coin": "BNB",
             "threshold": "0.1",
@@ -29,6 +31,7 @@
         {
             "name": "icon",
             "rpc": "https://ctz.solidwallet.io/api/v3/icon_dex",
+            "explorer": "https://tracker.icon.community/address",
             "type": "icon",
             "decimals": 18,
             "threshold": "200.0",
@@ -45,6 +48,7 @@
         {
             "name": "archway",
             "rpc": "https://api.mainnet.archway.io",
+            "explorer": "https://www.mintscan.io/archway/address",
             "type": "cosmos",
             "decimals": 18,
             "threshold": "50.0",
@@ -58,6 +62,7 @@
         {
             "name": "neutron",
             "rpc": "https://api.novel.remedy.tm.p2p.org",
+            "explorer": "https://www.mintscan.io/neutron/address",
             "type": "cosmos",
             "decimals": 6,
             "threshold": "20.0",

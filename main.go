@@ -32,6 +32,7 @@ var (
 type NetworkConfig struct {
 	Type      string            `json:"type"`
 	RPC       string            `json:"rpc"`
+	Explorer  string            `json:"explorer"`
 	Coin      string            `json:"coin"`
 	Name      string            `json:"name"`
 	Decimals  uint8             `json:"decimals"`
@@ -104,8 +105,8 @@ func main() {
 
 				etherBalance := toDecimalUnit(balance, networkConfig.Decimals)
 				fmt.Printf(prettyFormat, addressName, etherBalance.String(), balance.String(), threshold.String())
-				if checkBalanceThreshold(etherBalance, threshold) {
-					sendAlert(networkConfig.Name, address, etherBalance.String())
+				if exceedsBalanceThreshold(etherBalance, threshold) {
+					sendAlert(networkConfig.Name, address, etherBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
 				}
 			}
 
@@ -121,8 +122,8 @@ func main() {
 
 				icxBalance := toDecimalUnit(balance, networkConfig.Decimals)
 				fmt.Printf(prettyFormat, addressName, icxBalance.String(), balance.String(), threshold.String())
-				if checkBalanceThreshold(icxBalance, threshold) {
-					sendAlert(networkConfig.Name, address, icxBalance.String())
+				if exceedsBalanceThreshold(icxBalance, threshold) {
+					sendAlert(networkConfig.Name, address, icxBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
 				}
 			}
 
@@ -135,8 +136,8 @@ func main() {
 
 				icxBalance := toDecimalUnit(balance, networkConfig.Decimals)
 				fmt.Printf(prettyFormat, addressName, icxBalance.String(), balance.String(), threshold.String())
-				if checkBalanceThreshold(icxBalance, threshold) {
-					sendAlert(networkConfig.Name, address, icxBalance.String())
+				if exceedsBalanceThreshold(icxBalance, threshold) {
+					sendAlert(networkConfig.Name, address, icxBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
 				}
 			}
 		}
@@ -211,13 +212,13 @@ func toDecimalUnit(wei *big.Int, decimals uint8) *big.Float {
 }
 
 // check if balance is below threshold
-func checkBalanceThreshold(balance *big.Float, threshold *big.Float) bool {
+func exceedsBalanceThreshold(balance *big.Float, threshold *big.Float) bool {
 	return balance.Cmp(threshold) == -1
 }
 
 // send alert if balance is below threshold
-func sendAlert(network, address, balance string) {
-	message := fmt.Sprintf("Low balance alert for %s address %s. Current balance is %s", network, address, balance)
+func sendAlert(network, address, balance, threshold, coin, explorer string) {
+	message := fmt.Sprintf("🚨 **%s** Alert 🚨\n\nAddress: [%s](%s/%s)\nBalance: %s %s\nThreshold: %s %s\n\n", network, address, explorer, address, balance, coin, threshold, coin)
 	sendTelegramAlert(message)
 	sendDiscordAlert(message)
 }
@@ -231,7 +232,10 @@ func sendTelegramAlert(message string) error {
 		return err
 	}
 
-	_, err = http.Post("https://api.telegram.org/bot"+telegramBotToken+"/sendMessage", "application/json", bytes.NewBuffer(jsonMsg))
+	res, err := http.Post("https://api.telegram.org/bot"+telegramBotToken+"/sendMessage", "application/json", bytes.NewBuffer(jsonMsg))
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", res.StatusCode)
+	}
 	return err
 }
 
