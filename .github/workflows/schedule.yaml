@@ -19,6 +19,9 @@ jobs:
           go-version: 1.22
 
       - name: Build and run main.go
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: |
           go build main.go
           ./main
