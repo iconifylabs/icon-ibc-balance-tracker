@@ -26,18 +26,24 @@ var (
 	filePath          = "./wallets.json"
 	telegramBotToken  = os.Getenv("TELEGRAM_BOT_TOKEN")
 	discordWebhookURL = os.Getenv("DISCORD_WEBHOOK_URL")
-	prettyFormat      = "%-22s %-22s %-25s %-20s\n"
+	prettyFormat      = "%-50s %-35s %-25s %-20s\n"
 )
 
+type Wallet struct {
+	Address string `json:"address"`
+	Name    string `json:"name"`
+	Alert   bool   `json:"alert"`
+}
+
 type NetworkConfig struct {
-	Type      string            `json:"type"`
-	RPC       string            `json:"rpc"`
-	Explorer  string            `json:"explorer"`
-	Coin      string            `json:"coin"`
-	Name      string            `json:"name"`
-	Decimals  uint8             `json:"decimals"`
-	Threshold string            `json:"threshold"`
-	Addresses map[string]string `json:"addresses"`
+	Type      string   `json:"type"`
+	RPC       string   `json:"rpc"`
+	Explorer  string   `json:"explorer"`
+	Coin      string   `json:"coin"`
+	Name      string   `json:"name"`
+	Decimals  uint8    `json:"decimals"`
+	Threshold string   `json:"threshold"`
+	Wallets   []Wallet `json:"wallets"`
 }
 
 type ChainConfig struct {
@@ -83,7 +89,7 @@ func main() {
 
 		coinName := networkConfig.Coin
 		fmt.Printf(prettyFormat, "Address", fmt.Sprintf("Balance (%s)", coinName), "Balance", "Threshold")
-		fmt.Println(strings.Repeat("-", 90))
+		fmt.Println(strings.Repeat("-", 125))
 		threshold, ok := new(big.Float).SetString(networkConfig.Threshold)
 		if !ok {
 			fmt.Println("Error parsing threshold value")
@@ -97,16 +103,16 @@ func main() {
 			}
 			defer client.Close()
 
-			for addressName, address := range networkConfig.Addresses {
-				balance, err := getETHBalance(client, address)
+			for _, wallet := range networkConfig.Wallets {
+				balance, err := getETHBalance(client, wallet.Address)
 				if err != nil {
 					continue
 				}
 
 				etherBalance := toDecimalUnit(balance, networkConfig.Decimals)
-				fmt.Printf(prettyFormat, addressName, etherBalance.String(), balance.String(), threshold.String())
-				if exceedsBalanceThreshold(etherBalance, threshold) {
-					sendAlert(networkConfig.Name, address, etherBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
+				fmt.Printf(prettyFormat, wallet.Address, etherBalance.String(), balance.String(), threshold.String())
+				if wallet.Alert && exceedsBalanceThreshold(etherBalance, threshold) {
+					sendAlert(networkConfig.Name, wallet.Address, etherBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
 				}
 			}
 
@@ -114,30 +120,30 @@ func main() {
 			client := iconclient.NewClientV3(networkConfig.RPC)
 			defer client.Cleanup()
 
-			for addressName, address := range networkConfig.Addresses {
-				balance, err := getICXBalance(client, address)
+			for _, wallet := range networkConfig.Wallets {
+				balance, err := getICXBalance(client, wallet.Address)
 				if err != nil {
 					continue
 				}
 
 				icxBalance := toDecimalUnit(balance, networkConfig.Decimals)
-				fmt.Printf(prettyFormat, addressName, icxBalance.String(), balance.String(), threshold.String())
-				if exceedsBalanceThreshold(icxBalance, threshold) {
-					sendAlert(networkConfig.Name, address, icxBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
+				fmt.Printf(prettyFormat, wallet.Address, icxBalance.String(), balance.String(), threshold.String())
+				if wallet.Alert && exceedsBalanceThreshold(icxBalance, threshold) {
+					sendAlert(networkConfig.Name, wallet.Address, icxBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
 				}
 			}
 
 		case "cosmos":
-			for addressName, address := range networkConfig.Addresses {
-				balance, err := getCosmosBalance(networkConfig.RPC, address, networkConfig.Coin)
+			for _, wallet := range networkConfig.Wallets {
+				balance, err := getCosmosBalance(networkConfig.RPC, wallet.Address, networkConfig.Coin)
 				if err != nil {
 					continue
 				}
 
 				icxBalance := toDecimalUnit(balance, networkConfig.Decimals)
-				fmt.Printf(prettyFormat, addressName, icxBalance.String(), balance.String(), threshold.String())
-				if exceedsBalanceThreshold(icxBalance, threshold) {
-					sendAlert(networkConfig.Name, address, icxBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
+				fmt.Printf(prettyFormat, wallet.Address, icxBalance.String(), balance.String(), threshold.String())
+				if wallet.Alert && exceedsBalanceThreshold(icxBalance, threshold) {
+					sendAlert(networkConfig.Name, wallet.Address, icxBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
 				}
 			}
 		}
