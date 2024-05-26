@@ -58,7 +58,7 @@
             "explorer": "https://tracker.icon.community/address",
             "type": "icon",
             "decimals": 18,
-            "threshold": "200.0",
+            "threshold": "50.0",
             "coin": "ICX",
             "wallets": [
                 {
