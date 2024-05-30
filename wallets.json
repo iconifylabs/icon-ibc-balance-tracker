@@ -79,7 +79,7 @@
                 {
                     "name": "bsc-btp-relay",
                     "address": "hxea116f541c1b343de51763011f02fbcdc0748f89",
-                    "alert": false
+                    "alert": true
                 },
                 {
                     "name": "ibc-relay",
@@ -115,7 +115,7 @@
                 {
                     "name": "ibc-relay",
                     "address": "archway1xe0s2vfk3rswh90zcly90s2f63asfl85c6a6za",
-                    "alert": false
+                    "alert": true
                 }
             ]
         },
