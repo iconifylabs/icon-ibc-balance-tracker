@@ -129,7 +129,7 @@ func main() {
 				icxBalance := toDecimalUnit(balance, networkConfig.Decimals)
 				fmt.Printf(prettyFormat, wallet.Address, icxBalance.String(), balance.String(), threshold.String())
 				if wallet.Alert && exceedsBalanceThreshold(icxBalance, threshold) {
-					sendAlert(networkConfig.Name, wallet.Address, icxBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
+					sendAlert(networkConfig.Name, wallet.Name, wallet.Address, icxBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
 				}
 			}
 
@@ -143,7 +143,7 @@ func main() {
 				icxBalance := toDecimalUnit(balance, networkConfig.Decimals)
 				fmt.Printf(prettyFormat, wallet.Address, icxBalance.String(), balance.String(), threshold.String())
 				if wallet.Alert && exceedsBalanceThreshold(icxBalance, threshold) {
-					sendAlert(networkConfig.Name, wallet.Address, icxBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
+					sendAlert(networkConfig.Name, wallet.Name, wallet.Address, icxBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
 				}
 			}
 		}
