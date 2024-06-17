@@ -42,7 +42,8 @@ body:
   - type: dropdown
     id: Decimal
     attributes:
-      label: What browsers are you seeing the problem on?
+      label: Decimal value
+      description: Leave default value if you don't know
       multiple: false
       options:
         - 18
