@@ -44,7 +44,7 @@ body:
     attributes:
       label: What browsers are you seeing the problem on?
       multiple: false
-      validations:
+    validations:
         required: true
       options:
         - 18
