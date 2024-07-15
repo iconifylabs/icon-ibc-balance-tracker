@@ -104,14 +104,18 @@ func main() {
 			defer client.Close()
 
 			for _, wallet := range networkConfig.Wallets {
+				if !wallet.Alert {
+					continue
+				}
 				balance, err := getETHBalance(client, wallet.Address)
 				if err != nil {
+					fmt.Println(err)
 					continue
 				}
 
 				etherBalance := toDecimalUnit(balance, networkConfig.Decimals)
 				fmt.Printf(prettyFormat, wallet.Address, etherBalance.String(), balance.String(), threshold.String())
-				if wallet.Alert && exceedsBalanceThreshold(etherBalance, threshold) {
+				if exceedsBalanceThreshold(etherBalance, threshold) {
 					sendAlert(networkConfig.Name, wallet.Address, etherBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
 				}
 			}
@@ -121,28 +125,36 @@ func main() {
 			defer client.Cleanup()
 
 			for _, wallet := range networkConfig.Wallets {
+				if !wallet.Alert {
+					continue
+				}
 				balance, err := getICXBalance(client, wallet.Address)
 				if err != nil {
+					fmt.Println(err)
 					continue
 				}
 
 				icxBalance := toDecimalUnit(balance, networkConfig.Decimals)
 				fmt.Printf(prettyFormat, wallet.Address, icxBalance.String(), balance.String(), threshold.String())
-				if wallet.Alert && exceedsBalanceThreshold(icxBalance, threshold) {
+				if exceedsBalanceThreshold(icxBalance, threshold) {
 					sendAlert(networkConfig.Name, wallet.Address, icxBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
 				}
 			}
 
 		case "cosmos":
 			for _, wallet := range networkConfig.Wallets {
+				if !wallet.Alert {
+					continue
+				}
 				balance, err := getCosmosBalance(networkConfig.RPC, wallet.Address, networkConfig.Coin)
 				if err != nil {
+					fmt.Println(err)
 					continue
 				}
 
 				icxBalance := toDecimalUnit(balance, networkConfig.Decimals)
 				fmt.Printf(prettyFormat, wallet.Address, icxBalance.String(), balance.String(), threshold.String())
-				if wallet.Alert && exceedsBalanceThreshold(icxBalance, threshold) {
+				if exceedsBalanceThreshold(icxBalance, threshold) {
 					sendAlert(networkConfig.Name, wallet.Address, icxBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
 				}
 			}
@@ -169,7 +181,9 @@ func getCosmosBalance(rpc, address, denom string) (*big.Int, error) {
 
 	var cb CosmosBalance
 	if err := json.Unmarshal(body, &cb); err != nil {
-		fmt.Println("Error unmarshaling:", err)
+		fmt.Println("Error unmarshalling JSON response:", err)
+		fmt.Println(string(body))
+		return nil, err
 	}
 	for _, c := range cb.Balances {
 		if strings.EqualFold(strings.ToUpper(c.Denom), strings.ToUpper(denom)) {
@@ -178,7 +192,7 @@ func getCosmosBalance(rpc, address, denom string) (*big.Int, error) {
 			return &bigIntNumber, nil
 		}
 	}
-	return big.NewInt(0), nil
+	return nil, fmt.Errorf("no balance found for %s", denom)
 }
 
 func getICXBalance(client *iconclient.ClientV3, address string) (*big.Int, error) {
@@ -225,7 +239,6 @@ func exceedsBalanceThreshold(balance *big.Float, threshold *big.Float) bool {
 // send alert if balance is below threshold
 func sendAlert(network, address, balance, threshold, coin, explorer string) {
 	message := fmt.Sprintf("🚨 **%s** Alert 🚨\n\nAddress: [%s](%s/%s)\nBalance: %s %s\nThreshold: %s %s\n\n", network, address, explorer, address, balance, coin, threshold, coin)
-	sendTelegramAlert(message)
 	sendDiscordAlert(message)
 }
 

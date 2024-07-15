@@ -121,7 +121,7 @@
         },
         {
             "name": "neutron",
-            "rpc": "https://api.novel.remedy.tm.p2p.org",
+            "rpc": "https://rpc-falcron.pion-1.ntrn.tech",
             "explorer": "https://www.mintscan.io/neutron/address",
             "type": "cosmos",
             "decimals": 6,
