@@ -116,7 +116,7 @@ func main() {
 				etherBalance := toDecimalUnit(balance, networkConfig.Decimals)
 				fmt.Printf(prettyFormat, wallet.Address, etherBalance.String(), balance.String(), threshold.String())
 				if exceedsBalanceThreshold(etherBalance, threshold) {
-					sendAlert(networkConfig.Name, wallet.Address, etherBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
+					sendAlert(networkConfig.Name, wallet.Name, wallet.Address, etherBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
 				}
 			}
 
@@ -137,7 +137,7 @@ func main() {
 				icxBalance := toDecimalUnit(balance, networkConfig.Decimals)
 				fmt.Printf(prettyFormat, wallet.Address, icxBalance.String(), balance.String(), threshold.String())
 				if exceedsBalanceThreshold(icxBalance, threshold) {
-					sendAlert(networkConfig.Name, wallet.Address, icxBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
+					sendAlert(networkConfig.Name, wallet.Name, wallet.Address, icxBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
 				}
 			}
 
@@ -155,7 +155,7 @@ func main() {
 				icxBalance := toDecimalUnit(balance, networkConfig.Decimals)
 				fmt.Printf(prettyFormat, wallet.Address, icxBalance.String(), balance.String(), threshold.String())
 				if exceedsBalanceThreshold(icxBalance, threshold) {
-					sendAlert(networkConfig.Name, wallet.Address, icxBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
+					sendAlert(networkConfig.Name, wallet.Name, wallet.Address, icxBalance.String(), threshold.String(), coinName, networkConfig.Explorer)
 				}
 			}
 		}
@@ -237,8 +237,8 @@ func exceedsBalanceThreshold(balance *big.Float, threshold *big.Float) bool {
 }
 
 // send alert if balance is below threshold
-func sendAlert(network, address, balance, threshold, coin, explorer string) {
-	message := fmt.Sprintf("🚨 **%s** Alert 🚨\n\nAddress: [%s](%s/%s)\nBalance: %s %s\nThreshold: %s %s\n\n", network, address, explorer, address, balance, coin, threshold, coin)
+func sendAlert(network, walletName, address, balance, threshold, coin, explorer string) {
+	message := fmt.Sprintf("🚨 **%s** Alert 🚨\n\nWallet: %s\nAddress: [%s](%s/%s)\nBalance: %s %s\nThreshold: %s %s\n\n", network, walletName, address, explorer, address, balance, coin, threshold, coin)
 	sendDiscordAlert(message)
 }
 

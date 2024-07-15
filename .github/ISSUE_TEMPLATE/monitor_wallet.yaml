@@ -1,0 +1,70 @@
+name: Wallet Monitor
+description: Request Wallet to monitor
+title: "[Wallet Monitor]: "
+labels: ["request", "support"]
+projects: ["icon-project/centralized-relay", "icon-project/ibc-relay"]
+assignees:
+  - debendraoli
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Monitor your wallet balance.
+  - type: input
+    id: identifier
+    attributes:
+      label: Wallet Label
+      description: How you want to identify your wallet?
+      placeholder: ex. ibc-relayer
+    validations:
+      required: true
+  - type: input
+    id: address
+    attributes:
+      label: Address
+      description: Wallet address to monitor
+      placeholder: ex. 0x...
+    validations:
+      required: true
+
+  - type: input
+    id: threshold
+    attributes:
+      label: Threshold
+      description: Minimum threshold balance
+      placeholder: ex. 200
+    validations:
+      required: true
+
+  - type: dropdown
+    id: chain
+    attributes:
+      label: Chain
+      description: What chain address belongs to?
+      options:
+        - icon
+        - evm
+        - cosmos
+      default: 0
+    validations:
+      required: true
+  - type: dropdown
+    id: Decimal
+    attributes:
+      label: Decimal value
+      description: Leave default value if you don't know
+      multiple: false
+      options:
+        - 18
+        - 6
+      default: 0
+    validations:
+      required: true
+  - type: checkboxes
+    id: alert
+    attributes:
+      label: Alert Enabled
+      description: Send alert to discord? 
+      options:
+        - label: Whether to send alerts
+          required: true
